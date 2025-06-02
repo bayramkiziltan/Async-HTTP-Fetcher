@@ -3,14 +3,15 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "async-fetcher"
+name = "async_fetcher"
 version = "0.1.0"
+description = "High-performance Python library for async HTTP requests at scale"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
 authors = [
-  { name="Bayram Kiziltan" },
+    {name = "Bayram Kiziltan"}
 ]
-description = "Async HTTP fetcher with authentication support"
-readme = "docs/README.md"
-requires-python = ">=3.9"
 dependencies = [
     "aiohttp>=3.9",
     "pytest>=8",
@@ -19,10 +20,48 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
-    "pytest-asyncio",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "flake8>=6.0.0",
+    "coverage>=7.0.0",
 ]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "integration: marks tests as integration tests (may be skipped in CI)",
+]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "setup.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+show_missing = true
+precision = 2
+
+[tool.coverage.html]
+directory = "htmlcov"

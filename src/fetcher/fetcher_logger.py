@@ -1,23 +1,21 @@
-from ..utils import LogConfig, LoggingPolicy
 import logging
-from pathlib import Path
 
 class FetcherLogger:
     
     def __init__(self):
-        self.policy = LoggingPolicy(LogConfig(
-            level=logging.INFO,
-            file_path="logs/app.log",
-            format=(
-                "%(asctime)s [%(levelname)s] "
-                "%(name)s - %(message)s"
-            ),
-            console_output=True
-        ))
+        # Kütüphane kullanıcılarının logger konfigürasyonunu etkilememek için
+        # sadece logger'ları al, konfigürasyon yapma
+        self.request_logger = logging.getLogger("async_fetcher.request")
+        self.performance_logger = logging.getLogger("async_fetcher.performance")
+        self.error_logger = logging.getLogger("async_fetcher.error")
         
-        self.request_logger = self.policy.get_logger("fetcher.request")
-        self.performance_logger = self.policy.get_logger("fetcher.performance")
-        self.error_logger = self.policy.get_logger("fetcher.error")
+        # Eğer hiç handler yoksa, NullHandler ekle (logging best practice)
+        if not self.request_logger.handlers:
+            self.request_logger.addHandler(logging.NullHandler())
+        if not self.performance_logger.handlers:
+            self.performance_logger.addHandler(logging.NullHandler())
+        if not self.error_logger.handlers:
+            self.error_logger.addHandler(logging.NullHandler())
     
     def log_request_start(self, url: str, concurrent_requests: int):
         """İstek başlangıcını logla"""

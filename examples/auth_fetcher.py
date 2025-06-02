@@ -1,20 +1,18 @@
 import logging
 from contextlib import contextmanager
 import asyncio
-from ..utils import timer
+import sys
+import os
+# Ana proje dizinini path'e ekle
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src.utils import timer, LogConfig, LoggingPolicy
 import aiohttp
 import time
-from ..utils import LogConfig, LoggingPolicy
 import json
 from typing import Optional, Dict
 
-# Log konfigürasyonunu ayarla
-log_config = LogConfig(
-    level=logging.INFO,
-    file_path='logs/auth_fetcher.log',
-    format='%(asctime)s %(levelname)s %(name)s %(message)s'
-)
-LoggingPolicy(log_config)
+# Log konfigürasyonunu kaldır - sadece CLI kullanımında yapılacak
 
 class AuthConfig:
     def __init__(self, 
@@ -121,6 +119,14 @@ async def fetch_all(urls: list[str], concurrency: int = 100, auth_config: AuthCo
         return [result for result in results if result is not None]
 
 if __name__ == "__main__":
+    # Log konfigürasyonunu sadece CLI kullanımında ayarla
+    log_config = LogConfig(
+        level=logging.INFO,
+        file_path='logs/auth_fetcher.log',
+        format='%(asctime)s %(levelname)s %(name)s %(message)s'
+    )
+    LoggingPolicy(log_config)
+    
     # Test için örnek konfigürasyon
     auth_config = AuthConfig(
         auth_url="https://api.example.com/auth/login",

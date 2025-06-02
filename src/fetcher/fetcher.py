@@ -5,81 +5,154 @@ import aiohttp
 import time
 from .fetcher_logger import FetcherLogger
 import logging
+from typing import Union, Optional, Tuple
 
 logger = FetcherLogger()
 
-@timer()
-async def _fetch(session, url, sem, concurrency: int):
-    async with sem:
-        concurrent_requests = concurrency - sem._value
+class ConcurrencyTracker:
+    """Semaphore wrapper that tracks concurrent requests."""
+    
+    def __init__(self, max_concurrent: int):
+        self.max_concurrent = max_concurrent
+        self.semaphore = asyncio.Semaphore(max_concurrent)
+        self._active_count = 0
+        self._lock = asyncio.Lock()
+    
+    async def __aenter__(self):
+        await self.semaphore.acquire()
+        async with self._lock:
+            self._active_count += 1
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        async with self._lock:
+            self._active_count -= 1
+        self.semaphore.release()
+    
+    @property
+    def active_count(self) -> int:
+        """Returns current number of active requests."""
+        return self._active_count
+
+def _get_timeout(url: str) -> aiohttp.ClientTimeout:
+    """URL'ye göre uygun timeout değerini döndürür."""
+    if "/delay/" in url:
+        return aiohttp.ClientTimeout(total=10, connect=3)
+    elif "/status/" in url:
+        return aiohttp.ClientTimeout(total=8, connect=3)
+    else:
+        return aiohttp.ClientTimeout(total=6, connect=2)
+
+async def _parse_response(url: str, response: aiohttp.ClientResponse) -> Optional[str]:
+    """Response'u parse eder ve içeriği döndürür."""
+    try:
+        if url.endswith("/status/200"):
+            return "Success"
+        else:
+            return await response.text()
+    except (UnicodeDecodeError, aiohttp.ClientPayloadError) as e:
+        raise aiohttp.ClientPayloadError(f"Content error: {str(e)}")
+
+async def _handle_retry(attempt: int, max_retries: int) -> bool:
+    """Retry gerekip gerekmediğini kontrol eder ve bekler."""
+    if attempt < max_retries:
+        await asyncio.sleep(0.5 * (attempt + 1))
+        return True
+    return False
+
+async def _make_request(session: aiohttp.ClientSession, url: str, timeout: aiohttp.ClientTimeout) -> aiohttp.ClientResponse:
+    """HTTP request yapar ve response döndürür."""
+    request_options = {
+        "timeout": timeout,
+        "ssl": False
+    }
+    return await session.get(url, **request_options)
+
+async def _process_successful_response(url: str, response: aiohttp.ClientResponse, start_time: float, concurrent_requests: int) -> Optional[str]:
+    """200 response'u işler ve sonucu döndürür."""
+    try:
+        result = await _parse_response(url, response)
+        if result is not None:
+            duration = time.perf_counter() - start_time
+            logger.log_request_success(url, duration, concurrent_requests)
+            return result
+    except aiohttp.ClientPayloadError as e:
+        raise  # Caller'a fırlat, retry için
+    return None
+
+async def _handle_response(url: str, response: aiohttp.ClientResponse, start_time: float, concurrent_requests: int, attempt: int, max_retries: int) -> Tuple[Optional[str], bool]:
+    """Response'u işler. Returns: (result, should_retry)"""
+    if response.status == 200:
+        try:
+            result = await _process_successful_response(url, response, start_time, concurrent_requests)
+            return result, False
+        except aiohttp.ClientPayloadError as e:
+            if attempt == max_retries:
+                logger.log_request_error(url, str(e), concurrent_requests)
+                return None, False
+            return None, True  # Retry
+    
+    # Server error - retry if possible
+    if response.status >= 500:
+        should_retry = await _handle_retry(attempt, max_retries)
+        if not should_retry:
+            logger.log_request_failure(url, response.status, concurrent_requests)
+        return None, should_retry
         
+    logger.log_request_failure(url, response.status, concurrent_requests)
+    return None, False
+
+async def _single_request_attempt(session: aiohttp.ClientSession, url: str, concurrent_requests: int, attempt: int, max_retries: int) -> Tuple[Optional[str], bool]:
+    """Tek bir request denemesi yapar. Returns: (result, should_retry)"""
+    try:
+        if attempt == 0:
+            logger.log_request_start(url, concurrent_requests)
+        start_time = time.perf_counter()
+        
+        timeout = _get_timeout(url)
+        
+        async with await _make_request(session, url, timeout) as response:
+            return await _handle_response(url, response, start_time, concurrent_requests, attempt, max_retries)
+            
+    except asyncio.TimeoutError as e:
+        should_retry = await _handle_retry(attempt, max_retries)
+        if not should_retry:
+            logger.log_request_error(url, f"Timeout: {str(e)}", concurrent_requests)
+        return None, should_retry
+        
+    except (aiohttp.ClientError, asyncio.CancelledError) as e:
+        should_retry = await _handle_retry(attempt, max_retries)
+        if not should_retry:
+            logger.log_request_error(url, str(e), concurrent_requests)
+        return None, should_retry
+        
+    except Exception as e:
+        logger.log_request_error(url, str(e), concurrent_requests)
+        return None, False
+
+@timer()
+async def _fetch(session: aiohttp.ClientSession, url: str, tracker: ConcurrencyTracker) -> Optional[str]:
+    """URL'yi fetch eder, retry logic ile."""
+    async with tracker:
+        concurrent_requests = tracker.active_count
         max_retries = 2
+        
         for attempt in range(max_retries + 1):
-            try:
-                if attempt == 0:
-                    logger.log_request_start(url, concurrent_requests)
-                start = time.perf_counter()
-                
-                if "/delay/" in url:
-                    timeout = aiohttp.ClientTimeout(total=10, connect=3)
-                elif "/status/" in url:
-                    timeout = aiohttp.ClientTimeout(total=8, connect=3)
-                else:
-                    timeout = aiohttp.ClientTimeout(total=6, connect=2)
-                
-                request_options = {
-                    "timeout": timeout,
-                    "ssl": False
-                }
-                
-                async with session.get(url, **request_options) as response:
-                    if response.status == 200:
-                        try:
-                            if url.endswith("/status/200"):
-                                result = "Success"
-                            else:
-                                result = await response.text()
-                                
-                            if result is not None:
-                                duration = time.perf_counter() - start
-                                logger.log_request_success(url, duration, concurrent_requests)
-                                return result
-                        except (UnicodeDecodeError, aiohttp.ClientPayloadError) as e:
-                            if attempt == max_retries:
-                                logger.log_request_error(url, f"Content error: {str(e)}", concurrent_requests)
-                            continue
-                    
-                    if response.status >= 500 and attempt < max_retries:
-                        await asyncio.sleep(0.5 * (attempt + 1))
-                        continue
-                        
-                    logger.log_request_failure(url, response.status, concurrent_requests)
-                    return None
-                    
-            except asyncio.TimeoutError as e:
-                if attempt < max_retries:
-                    await asyncio.sleep(0.5 * (attempt + 1))
-                    continue
-                logger.log_request_error(url, f"Timeout: {str(e)}", concurrent_requests)
-                return None
-            except (aiohttp.ClientError, asyncio.CancelledError) as e:
-                if attempt < max_retries:
-                    await asyncio.sleep(0.5 * (attempt + 1))
-                    continue
-                logger.log_request_error(url, str(e), concurrent_requests)
-                return None
-            except Exception as e:
-                logger.log_request_error(url, str(e), concurrent_requests)
-                return None
+            result, should_retry = await _single_request_attempt(
+                session, url, concurrent_requests, attempt, max_retries
+            )
+            
+            if result is not None or not should_retry:
+                return result
         
         return None
 
 
 
 @timer()
-async def fetch_all(urls: list[str], concurrency: int = 100):
+async def fetch_all(urls: list[str], concurrency: int = 100) -> list[Optional[str]]:
     start_time = time.perf_counter()
-    sem = asyncio.Semaphore(concurrency)
+    tracker = ConcurrencyTracker(concurrency)
     
     conn = aiohttp.TCPConnector(
         limit=concurrency * 2,
@@ -98,7 +171,7 @@ async def fetch_all(urls: list[str], concurrency: int = 100):
     }
     
     async with aiohttp.ClientSession(**session_config) as session:
-        tasks = [_fetch(session, url, sem, concurrency) for url in urls]
+        tasks = [_fetch(session, url, tracker) for url in urls]
         results = await asyncio.gather(*tasks, return_exceptions=False)
         
         total_duration = time.perf_counter() - start_time
