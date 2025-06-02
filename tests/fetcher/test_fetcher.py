@@ -41,6 +41,8 @@ async def test_successful_urls():
         pytest.skip(f"Integration test skipped due to network issue: {e}")
 
 @pytest.mark.asyncio
+@pytest.mark.integration
+@pytest.mark.benchmark
 async def test_performance_metrics():
     """Test basic performance characteristics - may fail if httpbin.org is slow."""
     try:
@@ -70,6 +72,20 @@ async def test_performance_metrics():
         print(f"Duration: {summary['duration']:.2f}s")
         print(f"Requests/sec: {summary['rps']:.2f}")
         print(f"Success rate: {successful_requests}/{len(SUCCESS_URLS)}")
+        
+        # Save benchmark results to file for CI artifacts
+        benchmark_results = f"""
+Integration Benchmark Results:
+- Total URLs: {summary['total_requests']}
+- Successful requests: {summary['successful_requests']}
+- Duration: {summary['duration']:.4f} seconds
+- RPS: {summary['rps']:.2f} requests/second
+- Success rate: {successful_requests}/{len(SUCCESS_URLS)}
+"""
+        
+        # Append to benchmark results file
+        with open("benchmark-results.txt", "a") as f:
+            f.write(benchmark_results + "\n")
     except Exception as e:
         pytest.skip(f"Integration test skipped due to network issue: {e}")
 

@@ -63,3 +63,7 @@ Thumbs.db
 # Logs
 *.log
 logs/
+
+docs/CI_CD_PIPELINE_KURULUMU.md
+
+docs/BENCHMARK_SCRIPT.md

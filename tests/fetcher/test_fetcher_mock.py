@@ -160,6 +160,7 @@ async def test_concurrency_limits_mock():
 
 
 @pytest.mark.asyncio
+@pytest.mark.benchmark
 async def test_performance_characteristics_mock():
     """Test basic performance characteristics with mocked responses."""
     urls = [f"https://example.com/api/{i}" for i in range(5)]
@@ -181,3 +182,17 @@ async def test_performance_characteristics_mock():
     # Calculate RPS
     rps = len(results) / duration if duration > 0 else float('inf')
     assert rps > 1.0  # Should be very high with mocks
+    
+    # Save benchmark results to file for CI artifacts
+    import os
+    benchmark_results = f"""
+Mock Benchmark Results:
+- URLs processed: {len(results)}
+- Duration: {duration:.4f} seconds
+- RPS: {rps:.2f} requests/second
+- All requests successful: {all(result is not None for result in results)}
+"""
+    
+    # Append to benchmark results file
+    with open("benchmark-results.txt", "a") as f:
+        f.write(benchmark_results + "\n")
