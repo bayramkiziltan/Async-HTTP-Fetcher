@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "async-fetcher"
+version = "0.1.0"
+authors = [
+  { name="Bayram Kiziltan" },
+]
+description = "Async HTTP fetcher with authentication support"
+readme = "docs/README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "aiohttp>=3.9",
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
