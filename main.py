@@ -1,5 +1,4 @@
-from src.utils import LoggingPolicy, LogConfig
-from src.fetcher import fetch_all
+from async_fetcher import LoggingPolicy, LogConfig, fetch_all
 import logging
 import asyncio
 import time

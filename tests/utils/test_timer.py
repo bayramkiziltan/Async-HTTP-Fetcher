@@ -3,7 +3,7 @@ import logging
 import pytest
 import time
 from unittest.mock import patch, MagicMock
-from src.utils.timer import timer
+from async_fetcher import timer
 
 @pytest.fixture
 def mock_logger():

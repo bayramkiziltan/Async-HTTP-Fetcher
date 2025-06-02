@@ -2,7 +2,7 @@ import asyncio
 import logging
 import pytest
 import time
-from src.utils.timer import timer
+from async_fetcher import timer
 
 
 @pytest.mark.asyncio

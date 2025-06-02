@@ -1,11 +1,10 @@
 from contextlib import contextmanager
 import asyncio
-from ..utils import timer
+from async_fetcher.utils import timer
 import aiohttp
-import time
-from .fetcher_logger import FetcherLogger
-import logging
+from async_fetcher.fetcher.fetcher_logger import FetcherLogger
 from typing import Union, Optional, Tuple
+import time
 
 logger = FetcherLogger()
 

@@ -6,7 +6,7 @@ import pytest
 import asyncio
 from unittest.mock import AsyncMock, patch, MagicMock
 import aiohttp
-from src.fetcher import fetch_all
+from async_fetcher import fetch_all
 
 
 class MockResponse:

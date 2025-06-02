@@ -6,7 +6,7 @@ import os
 # Ana proje dizinini path'e ekle
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.utils import timer, LogConfig, LoggingPolicy
+from async_fetcher import timer, LogConfig, LoggingPolicy
 import aiohttp
 import time
 import json

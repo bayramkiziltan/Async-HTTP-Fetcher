@@ -1,6 +1,6 @@
 import pytest
 import logging
-from src.utils.context_utils import log_time, LogTime
+from async_fetcher.utils import log_time, LogTime
 import time
 
 @pytest.fixture

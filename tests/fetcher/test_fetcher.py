@@ -5,7 +5,7 @@ Use pytest -m "not integration" to skip these tests.
 """
 import pytest
 import asyncio
-from src.fetcher import fetch_all
+from async_fetcher import fetch_all
 
 # Mark all tests in this file as integration tests
 pytestmark = pytest.mark.integration
@@ -26,7 +26,7 @@ ERROR_URLS = [
 async def test_successful_urls():
     """Test fetching from real URLs - may fail if httpbin.org is down."""
     try:
-        results = await fetch_all(SUCCESS_URLS, concurrency=3, timeout=10.0)
+        results = await fetch_all(SUCCESS_URLS, concurrency=3)
         
         assert len(results) == len(SUCCESS_URLS)
         
@@ -48,7 +48,7 @@ async def test_performance_metrics():
     try:
         start_time = asyncio.get_event_loop().time()
         
-        results = await fetch_all(SUCCESS_URLS, concurrency=3, timeout=10.0)
+        results = await fetch_all(SUCCESS_URLS, concurrency=3)
         
         end_time = asyncio.get_event_loop().time()
         duration = end_time - start_time
@@ -93,7 +93,7 @@ Integration Benchmark Results:
 async def test_error_handling():
     """Test error handling with real error URLs."""
     try:
-        results = await fetch_all(ERROR_URLS, concurrency=2, timeout=5.0)
+        results = await fetch_all(ERROR_URLS, concurrency=2)
         
         assert len(results) == len(ERROR_URLS)
         # All should be None due to errors
@@ -101,7 +101,7 @@ async def test_error_handling():
         
         # Test mixed URLs
         mixed_urls = SUCCESS_URLS[:1] + ERROR_URLS[:1]
-        results = await fetch_all(mixed_urls, concurrency=2, timeout=5.0)
+        results = await fetch_all(mixed_urls, concurrency=2)
         
         assert len(results) == 2
         # At least one should be an error (the error URL)

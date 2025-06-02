@@ -34,11 +34,15 @@ jobs:
         python -m flake8 src tests --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
     - name: Test with pytest
+      env:
+        PYTHONPATH: ${{ github.workspace }}/src
       run: |
         # Run unit and mock tests (exclude integration and benchmark tests)
         python -m pytest tests/fetcher/test_fetcher_mock.py tests/utils/ -m "not benchmark" --cov=src --cov-report=xml --cov-report=html --cov-report=term-missing
         
     - name: Run integration tests (allow failures)
+      env:
+        PYTHONPATH: ${{ github.workspace }}/src
       run: |
         # Run integration tests separately - they may fail due to external dependencies
         python -m pytest -m "integration" --tb=short || echo "Integration tests failed - this is expected in CI"
@@ -79,6 +83,8 @@ jobs:
         pip install .[dev]
 
     - name: Run benchmark tests
+      env:
+        PYTHONPATH: ${{ github.workspace }}/src
       run: |
         # Run only benchmark tests with detailed output
         python -m pytest -m "benchmark" --tb=long -v

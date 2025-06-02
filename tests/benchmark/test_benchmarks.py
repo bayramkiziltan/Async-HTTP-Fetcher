@@ -6,7 +6,7 @@ import pytest
 import asyncio
 import time
 from unittest.mock import patch
-from src.fetcher import fetch_all
+from async_fetcher import fetch_all
 from tests.fetcher.test_fetcher_mock import MockResponse, MockResponseAwaitable
 
 

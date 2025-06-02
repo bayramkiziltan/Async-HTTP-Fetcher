@@ -84,3 +84,118 @@ Memory Efficiency Benchmark (100 URLs, 1KB responses):
 - Data throughput: 30.83 MB/s
 - Total data processed: 101.7 KB
 
+
+Mock Benchmark Results:
+- URLs processed: 5
+- Duration: 0.0004 seconds
+- RPS: 12711.88 requests/second
+- All requests successful: True
+
+
+Small Batch Benchmark (10 URLs):
+- Duration: 0.0006 seconds
+- RPS: 15943.67 requests/second
+- Concurrency: 5
+- Success rate: 100%
+
+
+Medium Batch Benchmark (100 URLs):
+- Duration: 0.0031 seconds
+- RPS: 32438.57 requests/second
+- Concurrency: 10
+- Success rate: 100%
+
+
+Large Batch Benchmark (500 URLs):
+- Duration: 0.0111 seconds
+- RPS: 44995.56 requests/second
+- Concurrency: 20
+- Success rate: 100%
+
+
+Concurrency Comparison Benchmark (50 URLs):
+  Concurrency 1: 15285.65 RPS (0.0033s)
+  Concurrency 5: 37686.07 RPS (0.0013s)
+  Concurrency 10: 41915.54 RPS (0.0012s)
+  Concurrency 20: 16030.35 RPS (0.0031s)
+  Concurrency 50: 38661.06 RPS (0.0013s)
+
+
+Error Handling Benchmark (100 URLs, 70/30 success/error):
+- Duration: 4.5152 seconds
+- RPS: 22.15 requests/second
+- Success rate: 70.0%
+- Successful: 70, Failed: 30
+
+
+Memory Efficiency Benchmark (100 URLs, 1KB responses):
+- Duration: 0.0111 seconds
+- RPS: 8982.67 requests/second
+- Data throughput: 8.92 MB/s
+- Total data processed: 101.7 KB
+
+
+Mock Benchmark Results:
+- URLs processed: 5
+- Duration: 0.0012 seconds
+- RPS: 4322.30 requests/second
+- All requests successful: True
+
+
+Small Batch Benchmark (10 URLs):
+- Duration: 0.0027 seconds
+- RPS: 3660.88 requests/second
+- Concurrency: 5
+- Success rate: 100%
+
+
+Medium Batch Benchmark (100 URLs):
+- Duration: 0.0058 seconds
+- RPS: 17264.94 requests/second
+- Concurrency: 10
+- Success rate: 100%
+
+
+Large Batch Benchmark (500 URLs):
+- Duration: 0.0236 seconds
+- RPS: 21157.49 requests/second
+- Concurrency: 20
+- Success rate: 100%
+
+
+Concurrency Comparison Benchmark (50 URLs):
+  Concurrency 1: 23718.69 RPS (0.0021s)
+  Concurrency 5: 24299.86 RPS (0.0021s)
+  Concurrency 10: 11465.48 RPS (0.0044s)
+  Concurrency 20: 15229.01 RPS (0.0033s)
+  Concurrency 50: 31076.82 RPS (0.0016s)
+
+
+Error Handling Benchmark (100 URLs, 70/30 success/error):
+- Duration: 4.5177 seconds
+- RPS: 22.14 requests/second
+- Success rate: 70.0%
+- Successful: 70, Failed: 30
+
+
+Memory Efficiency Benchmark (100 URLs, 1KB responses):
+- Duration: 0.0041 seconds
+- RPS: 24132.00 requests/second
+- Data throughput: 23.96 MB/s
+- Total data processed: 101.7 KB
+
+
+Integration Benchmark Results:
+- Total URLs: 3
+- Successful requests: 3
+- Duration: 1.9672 seconds
+- RPS: 1.53 requests/second
+- Success rate: 3/3
+
+
+Mock Benchmark Results:
+- URLs processed: 5
+- Duration: 0.0004 seconds
+- RPS: 11454.75 requests/second
+- All requests successful: True
+
