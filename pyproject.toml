@@ -25,6 +25,7 @@ dev = [
     "pytest-cov>=4.1.0",
     "flake8>=6.0.0",
     "coverage>=7.0.0",
+    "codecov>=2.1.0",
 ]
 
 [tool.hatch.build.targets.wheel]

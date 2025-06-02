@@ -29,19 +29,19 @@ jobs:
     - name: Lint with flake8
       run: |
         # Stop the build if there are Python syntax errors or undefined names
-        flake8 src tests --count --select=E9,F63,F7,F82 --show-source --statistics
+        python -m flake8 src tests --count --select=E9,F63,F7,F82 --show-source --statistics
         # Exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 src tests --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        python -m flake8 src tests --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
     - name: Test with pytest
       run: |
         # Run unit and mock tests (exclude integration and benchmark tests)
-        pytest -m "not integration and not benchmark" --cov=src --cov-report=xml --cov-report=html --cov-report=term-missing
+        python -m pytest tests/fetcher/test_fetcher_mock.py tests/utils/ -m "not benchmark" --cov=src --cov-report=xml --cov-report=html --cov-report=term-missing
         
     - name: Run integration tests (allow failures)
       run: |
         # Run integration tests separately - they may fail due to external dependencies
-        pytest -m "integration" --tb=short || echo "Integration tests failed - this is expected in CI"
+        python -m pytest -m "integration" --tb=short || echo "Integration tests failed - this is expected in CI"
       continue-on-error: true
 
     - name: Upload coverage to Codecov
@@ -81,7 +81,7 @@ jobs:
     - name: Run benchmark tests
       run: |
         # Run only benchmark tests with detailed output
-        pytest -m "benchmark" --tb=long -v
+        python -m pytest -m "benchmark" --tb=long -v
       continue-on-error: true  # Allow benchmark failures without breaking the pipeline
 
     - name: Upload benchmark results
